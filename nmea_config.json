@@ -1,0 +1,72 @@
+{
+  "protocol": "Larus v0.1.6",
+  "description": "CAN-to-NMEA Bridge for Larus Glider Flight Information System",
+  "can_interface": "can0",
+  "serial_output": {
+    "enabled": false,
+    "port": "/dev/ttyUSB0",
+    "baudrate": 9600
+  },
+  "can_messages": {
+    "0x100": {
+      "name": "GPS Position",
+      "fields": ["latitude (i32)", "longitude (i32)"],
+      "scale": 1000000,
+      "nmea_output": ["$GPGGA", "$GPRMC"]
+    },
+    "0x101": {
+      "name": "Speed & Course",
+      "fields": ["speed_knots (u16)", "course_deg (u16)"],
+      "scale": ["100", "10"],
+      "nmea_output": "$GPRMC"
+    },
+    "0x102": {
+      "name": "Heading",
+      "fields": ["heading_deg (u16)"],
+      "scale": 10,
+      "nmea_output": "Part of $PLARA"
+    },
+    "0x103": {
+      "name": "Attitude (Roll, Pitch, Yaw)",
+      "fields": ["roll_deg (i16)", "pitch_deg (i16)", "yaw_deg (i16)"],
+      "scale": 10,
+      "ranges": ["±180", "±90", "0-360"],
+      "nmea_output": "$PLARA"
+    },
+    "0x104": {
+      "name": "Variometer Data",
+      "fields": ["tek_vario (i16)", "avg_vario (i16)", "pressure_alt (i16)", "tas (u16)"],
+      "scale": ["100", "100", "1", "1"],
+      "units": ["m/s", "m/s", "m", "km/h"],
+      "nmea_output": "$PLARV"
+    },
+    "0x105": {
+      "name": "Wind Information",
+      "fields": ["bearing_deg (u16)", "speed_kmh (u16)"],
+      "scale": 10,
+      "nmea_output": "$PLARW"
+    },
+    "0x106": {
+      "name": "Battery & Temperature",
+      "fields": ["voltage_V (u16)", "temperature_C (i16)"],
+      "scale": ["100", "10"],
+      "nmea_output": "$PLARB"
+    },
+    "0x107": {
+      "name": "Air Density",
+      "fields": ["density_gm3 (u16)"],
+      "scale": 10,
+      "nmea_output": "$PLARD"
+    }
+  },
+  "xcsoard_integration": {
+    "note": "Compatible with XCSoar Glide Computer",
+    "settings_messages": [
+      "$PLARS,L,MC,value - MacCready setting (m/s)",
+      "$PLARS,L,BAL,value - Ballast fraction (0.0-1.0)",
+      "$PLARS,L,BUGS,value - Bugs percent (0-50%)",
+      "$PLARS,L,QNH,value - QNH setting (hPa)",
+      "$PLARS,L,CIR,value - Circling mode (0=Cruise, 1=Circling)"
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  can-bridge:
+    build: .
+    container_name: larus-can-bridge
+    restart: unless-stopped
+    environment:
+      - CAN_INTERFACE=vcan0
+      - LOG_LEVEL=info
+    volumes:
+      - ./nmea_bridge.log:/var/log/larus/nmea_bridge.log
+      - ./nmea_config.json:/etc/larus/nmea_config.json
+    ports:
+      - "9090:9090"
+    networks:
+      - larus_net
+    depends_on:
+      - can-simulator
+    healthcheck:
+      test: ["CMD", "test", "-f", "/var/log/larus/nmea_bridge.log"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  can-simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.simulator
+    container_name: larus-can-simulator
+    restart: unless-stopped
+    environment:
+      - CAN_INTERFACE=vcan0
+    networks:
+      - larus_net
+    command: ./can-simulator vcan0
+
+networks:
+  larus_net:
+    driver: bridge
+
+volumes:
+  larus_logs:
+    driver: local
