@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
   if (argc > 4) tcp_port = std::atoi(argv[4]);
 
   std::cout << "\n╔════════════════════════════════════════╗" << std::endl;
-  std::cout << "║  Larus CAN-to-NMEA Bridge (v2.2)      ║" << std::endl;
+  std::cout << "║  Larus CAN-to-NMEA Gateway (v2.2)     ║" << std::endl;
   std::cout << "║  XCSoar Compatible - Socket Ready! ✓  ║" << std::endl;
   std::cout << "╚════════════════════════════════════════╝\n" << std::endl;
 

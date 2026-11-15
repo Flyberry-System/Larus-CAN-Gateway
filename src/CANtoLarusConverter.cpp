@@ -6,7 +6,7 @@
 
 CANtoLarusConverter::CANtoLarusConverter(TCPServer* tcp, SerialPort* serial)
   : tcp_server(tcp), serial_port(serial) {
-  log_file.open("larus_bridge.log", std::ios::app);
+  log_file.open("larus_gateway.log", std::ios::app);
 }
 
 CANtoLarusConverter::~CANtoLarusConverter() {
