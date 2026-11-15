@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
   std::string can_interface = "can0";
   std::string output_mode = "tcp";
   std::string serial_port = "/dev/ttyUSB0";
-  int tcp_port = 4353;  // XCSoar standard port
+  int tcp_port = 2000;
 
   if (argc > 1) can_interface = argv[1];
   if (argc > 2) output_mode = argv[2];
