@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
     if (reader.readMessage(can_msg)) {
       converter.convert(can_msg);
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
   delete tcp_server;
