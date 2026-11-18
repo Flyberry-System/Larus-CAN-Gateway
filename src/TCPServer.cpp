@@ -19,7 +19,6 @@ TCPServer::~TCPServer() {
 }
 
 bool TCPServer::start() {
-#ifdef __linux__
   server_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (server_socket < 0) {
     std::cerr << "✗ TCP socket creation failed" << std::endl;
@@ -50,10 +49,6 @@ bool TCPServer::start() {
 
   std::thread(&TCPServer::acceptConnections, this).detach();
   return true;
-#else
-  std::cout << "⚠ TCP Server not available on Windows (use Serial)" << std::endl;
-  return true;
-#endif
 }
 
 void TCPServer::send(const std::string& msg) {

@@ -1,11 +1,54 @@
-#include <iostream>
-#include <thread>
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
+#include <csignal>
+#include <cstdlib>
+#include <iostream>
+#include <mutex>
+#include <queue>
+#include <string>
+#include <thread>
 
 #include "CANReader.h"
 #include "CANtoLarusConverter.h"
 #include "TCPServer.h"
 #include "SerialPort.h"
+
+static std::atomic<bool> running{true};
+
+static void onSignal(int) {
+  running = false;
+}
+
+// Thread-sichere Queue zwischen CAN-Reader und Converter
+class MessageQueue {
+public:
+  void push(const CANMessage& m) {
+    {
+      std::lock_guard<std::mutex> lk(mtx_);
+      if (q_.size() >= kMaxSize) q_.pop();   // bei Überlauf älteste verwerfen
+      q_.push(m);
+    }
+    cv_.notify_one();
+  }
+
+  bool pop(CANMessage& m, int timeout_ms) {
+    std::unique_lock<std::mutex> lk(mtx_);
+    if (!cv_.wait_for(lk, std::chrono::milliseconds(timeout_ms),
+                      [&] { return !q_.empty(); })) {
+      return false;
+    }
+    m = q_.front();
+    q_.pop();
+    return true;
+  }
+
+private:
+  static constexpr size_t kMaxSize = 1024;
+  std::queue<CANMessage> q_;
+  std::mutex mtx_;
+  std::condition_variable cv_;
+};
 
 int main(int argc, char* argv[]) {
   std::string can_interface = "can0";
@@ -53,17 +96,33 @@ int main(int argc, char* argv[]) {
 
   CANtoLarusConverter converter(tcp_server, serial_port_obj);
 
-  CANMessage can_msg;
+  std::signal(SIGINT, onSignal);
+  std::signal(SIGTERM, onSignal);
+
   std::cout << "\nPress Ctrl+C to exit\n" << std::endl;
 
-  while (true) {
-    if (reader.readMessage(can_msg)) {
-      converter.convert(can_msg);
+  MessageQueue queue;
+
+  // Producer: liest nur vom CAN-Socket und legt in die Queue
+  std::thread reader_thread([&] {
+    CANMessage msg;
+    while (running) {
+      if (reader.waitForMessage(msg, 100)) queue.push(msg);
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  });
+
+  // Consumer: konvertiert und sendet (im Hauptthread)
+  CANMessage can_msg;
+  while (running) {
+    if (queue.pop(can_msg, 100)) converter.convert(can_msg);
   }
+
+  reader_thread.join();
+  reader.stop();
 
   delete tcp_server;
   delete serial_port_obj;
+
+  std::cout << "Gateway beendet." << std::endl;
   return 0;
 }
